@@ -280,6 +280,7 @@
     </div>
     <div class="keys">
       <kbd>Spasi</kbd> play / tap · <kbd>←</kbd><kbd>→</kbd> geser 5 detik · <kbd>T</kbd> tap sync · <kbd>Backspace</kbd> undo · <kbd>Esc</kbd> batal
+      <div style="margin-top:6px">Lagu dan lirik lu diproses di browser ini sendiri — nggak ada yang diupload ke server mana pun.</div>
     </div>
   </section>
 
@@ -307,7 +308,7 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const cv = $('cv'), ctx = cv.getContext('2d'), audio = $('audio');
-const FONT = '"Arial Narrow","Helvetica Neue",Helvetica,Arial,sans-serif';
+const FONT = '"Arial Narrow","Liberation Sans Narrow","Nimbus Sans Narrow","Helvetica Neue",Helvetica,Arial,sans-serif';
 const state = { tracks: [], lines: [], title: '', duration: 0, hasAudio: false, t: 0, t0: 0, playing: false, recording: false, tap: null, tapIdx: 0 };
 const canFilter = 'filter' in ctx;
 const PLACEHOLDER = 'semoga umur dengan rezeki sama panjang';

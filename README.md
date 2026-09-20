@@ -1,33 +1,48 @@
 # brat lyrics
 
-Generator video lirik gaya *brat* — teks lowercase, background hijau, blur tipis — langsung dari browser. Tinggal muat file lirik, pilih lagunya, lalu export jadi video.
+Bikin video lirik gaya *brat* — teks lowercase, latar hijau, blur tipis — langsung dari browser.
 
 ![preview](docs/preview.png)
 
+## Abstrak
+
+Bikin video lirik itu kerjaan yang ngeselin: buka editor video, tarik teks satu-satu, geser timeline sampai pas, ulangi enam puluh kali. Padahal buat video lirik bergaya *brat* — satu baris teks, latar polos, tanpa transisi — sebenernya yang dibutuhkan cuma dua hal: daftar kalimat, dan kapan tiap kalimat muncul.
+
+Proyek ini ngambil jalan pintas itu. Lirik bertimestamp (format LRC, atau JSON dari [LRCLIB](https://lrclib.net)) dipakai langsung sebagai timeline. Tiap baris digambar ke `<canvas>` dengan ukuran font yang dihitung otomatis biar penuh sekotak, lalu kanvasnya direkam pakai `MediaRecorder` bareng audio aslinya jadi satu file video.
+
+Masalahnya, timestamp dari database lirik sering meleset — kadang beberapa detik, kadang tiap baris beda-beda. Karena itu ada **tap sync**: putar lagunya, tekan spasi tiap ganti baris, dan waktunya langsung kesimpen. Ngoreksi satu lagu jadi cuma selama lagunya itu sendiri.
+
+Semua jalan di browser. Nggak ada server, nggak ada upload, nggak ada proses render di belakang layar.
+
 ## Fitur
 
-- **Jalan di browser, tanpa server.** Buka `index.html`, selesai. File lirik dan lagu nggak ke mana-mana, semua diproses lokal.
-- **Input fleksibel.** File JSON hasil [LRCLIB](https://lrclib.net), file `.lrc`, atau tempel teks LRC langsung.
-- **Tap sync.** Tempo lagunya meleset? Putar lagunya, tekan `Spasi` tiap ganti baris, timing-nya langsung kesimpen. Ada undo yang sekalian mundurin lagunya.
-- **Geser timing global** kalau cuma telat/kecepetan beberapa detik.
-- **Preview live** dengan daftar baris di bawahnya yang bisa diklik buat loncat.
-- **Export video** 1:1, 9:16, atau 16:9, lengkap dengan audionya.
-- **Download LRC** hasil tap biar timing-nya bisa dipakai lagi.
-- Ada juga [`brat_lyrics.py`](brat_lyrics.py) buat render offline lewat ffmpeg — lebih cepat, tapi tanpa preview.
+- **Tanpa server.** Satu file HTML. Buka lokal atau hosting di GitHub Pages, sama aja.
+- **Input fleksibel.** JSON dari LRCLIB, file `.lrc`, atau tempel teks LRC langsung.
+- **Tap sync** buat benerin timing yang meleset, lengkap sama undo yang ikut mundurin lagunya.
+- **Geser timing global** kalau semua baris telat atau kecepetan sekian detik.
+- **Preview live** plus daftar baris yang bisa diklik buat loncat.
+- **Export video** 1:1, 9:16, atau 16:9, lengkap sama audionya.
+- **Download LRC** hasil tap biar timing-nya bisa dipakai lagi lain kali.
+- **[`brat_lyrics.py`](brat_lyrics.py)** buat render offline lewat ffmpeg — jauh lebih cepat, tapi tanpa preview.
 
 ## Cara pakai
 
-1. Buka `index.html` di browser (Chrome/Edge paling mulus buat export).
+1. Buka `index.html` di browser. Chrome atau Edge paling mulus buat export.
 2. **Lirik** — pilih file JSON/LRC, atau tempel teks LRC lalu klik *Pakai LRC ini*.
-   File JSON-nya bisa diambil dari LRCLIB, misalnya:
-   ```
-   https://lrclib.net/api/search?q=judul+lagu
-   ```
-   Simpan hasilnya jadi `.json`, terus muat di sini.
-3. **Audio** — pilih file lagunya. Opsional, tapi butuh ini kalau mau ada suaranya di video.
+3. **Audio** — pilih file lagunya. Opsional, tapi wajib kalau mau ada suaranya di video.
 4. **Tampilan** — atur ukuran, warna, blur, ukuran font.
 5. **Timing** — kalau meleset, pakai geser global atau tap sync.
-6. **Export video** — lagunya diputar sekali dari awal sambil direkam, jadi durasinya sama dengan lagunya. Jangan pindah tab selama proses ini.
+6. **Export video** — lagunya diputar sekali dari awal sambil direkam. Jangan pindah tab selama proses ini.
+
+Buat nyobain cepat tanpa nyari lirik dulu, muat aja [`sample.lrc`](sample.lrc) yang ada di repo ini.
+
+### Dapetin file liriknya
+
+LRCLIB punya API terbuka. Cari lagunya, simpan hasilnya jadi `.json`, terus muat di aplikasinya:
+
+```
+https://lrclib.net/api/search?q=judul+lagu
+```
 
 ### Shortcut
 
@@ -44,17 +59,43 @@ Generator video lirik gaya *brat* — teks lowercase, background hijau, blur tip
 Buat lagu yang timing LRC-nya berantakan:
 
 1. Klik **Mulai tap sync** (atau tekan `T`). Lagu jalan dari awal.
-2. Tiap denger baris baru mulai, tekan `Spasi`. Baris berikutnya yang harus di-tap muncul di bar bawah preview.
-3. Salah tap? `Backspace` buat undo — lagu mundur beberapa detik biar bisa langsung coba lagi.
+2. Tiap denger baris baru mulai, tekan `Spasi`. Baris berikutnya yang harus di-tap kelihatan di bar bawah preview.
+3. Salah tap? `Backspace` — lagu mundur beberapa detik biar bisa langsung coba lagi.
 4. Setelah baris terakhir (atau klik *Selesai*), timing baru langsung kepakai.
 
 Setelan tambahan:
 
-- **Mulai dari baris #** — cuma benerin sebagian. Baris yang belum di-tap ikut bergeser sebesar selisih tap terakhir.
-- **Kompensasi (ms)** — default 100 ms, karena tap manusia biasanya telat dikit. Masih telat? Naikin.
+- **Mulai dari baris #** — cuma benerin sebagian. Baris yang belum di-tap ikut bergeser sebesar selisih tap terakhir, jadi ritme sisanya nggak rusak.
+- **Kompensasi (ms)** — default 100 ms, karena refleks orang biasanya telat dikit dari yang didenger. Masih telat? Naikin.
 - **Mundur saat undo (detik)** — seberapa jauh lagu mundur waktu undo.
 
-Timing hasil tap nggak otomatis kesimpen, jadi klik **Download LRC** kalau nggak mau ngulang.
+Timing hasil tap nggak kesimpen otomatis, jadi klik **Download LRC** kalau nggak mau ngulang dari nol.
+
+## Cara kerjanya
+
+Empat langkah, semuanya di browser:
+
+1. **Parse.** Teks LRC diubah jadi daftar `{mulai, selesai, teks}`. Waktu selesai satu baris diambil dari waktu mulai baris berikutnya, jadi cukup satu timestamp per baris.
+2. **Layout.** Tiap baris dicari ukuran font terbesar yang masih muat sekotak, lewat binary search pakai `measureText`. Hasilnya di-cache, karena baris yang sama sering muncul berkali-kali di satu lagu.
+3. **Render.** Tiap frame nggambar ulang kanvas: latar polos, teks lowercase, blur pakai `ctx.filter`. Posisi waktunya diambil dari `audio.currentTime` biar nggak pernah ngedrift dari lagunya.
+4. **Rekam.** `canvas.captureStream()` digabung sama audio lewat `AudioContext`, terus disuapin ke `MediaRecorder`. Hasilnya blob yang langsung di-download.
+
+Konsekuensinya: perekaman jalan real-time. Lagu tiga menit ya tiga menit, dan browser harus tetep di depan selama itu. Kalau butuh cepat, pakai versi CLI-nya yang nge-render frame langsung ke ffmpeg tanpa nunggu.
+
+## Hosting & privasi
+
+Nggak ada backend, jadi cukup hosting statis apa pun. Repo ini udah bawa workflow [`pages.yml`](.github/workflows/pages.yml) yang nge-deploy otomatis tiap push ke `main`:
+
+1. Push repo-nya ke GitHub.
+2. Buka **Settings → Pages**, bagian *Source* pilih **GitHub Actions**.
+3. Tunggu workflow-nya jalan. Situsnya muncul di `https://<username>.github.io/<repo>/`.
+
+Yang perlu diingat soal data:
+
+- File lirik dan audio dibaca lewat `FileReader`/`URL.createObjectURL` — nggak pernah ninggalin browser lu.
+- Video hasilnya dibikin di memori terus langsung di-download. Nggak ada yang nyangkut di server.
+- Yang kesimpen cuma setelan tampilan (ukuran, warna, blur) di `localStorage`, buat kenyamanan aja.
+- Artinya kuota GitHub yang kepake cuma buat file statisnya — sekitar seratus kilobyte, nggak peduli berapa banyak video yang dibikin orang.
 
 ## Render lewat CLI
 
@@ -64,13 +105,29 @@ Butuh `ffmpeg`, Python 3, dan Pillow:
 python3 brat_lyrics.py search.json -o out.mp4 --audio lagu.mp3 --size 1080x1920
 ```
 
-Opsi: `--index` (pilih lagu di JSON), `--start` / `--end` (render potongan), `--bg`, `--fg`, `--blur`, `--max-font`, `--valign`, `--font`.
+Opsi lain: `--index` (pilih lagu di JSON), `--start` / `--end` (render potongan buat ngecek cepat), `--bg`, `--fg`, `--blur`, `--max-font`, `--valign`, `--font`.
 
-## Catatan
+## Batasan
 
-- Export pakai `MediaRecorder`, jadi hasilnya `.mp4` di browser yang support, `.webm` di browser lain. Perekamannya real-time — lagu 3 menit ya 3 menit.
-- Font default Arial Narrow. Di Windows/Linux yang nggak punya font itu, tampilannya jatuh ke Arial biasa yang lebih lebar.
-- File lirik lagu itu karya berhak cipta. Repo ini sengaja nggak nyimpen file lirik atau audio apa pun — lihat `.gitignore`.
+- Export pakai `MediaRecorder`, jadi hasilnya `.mp4` di browser yang support dan `.webm` di sisanya. Perekamannya real-time dan browser harus tetep di depan.
+- Ganti baris masih potong langsung, belum ada transisi atau animasi per kata.
+- Font default Arial Narrow. Di sistem yang nggak punya font itu, tampilannya jatuh ke Liberation Sans Narrow atau Arial biasa yang lebih lebar.
+- Tap sync ngatur waktu mulai baris. Belum bisa ngedit teksnya, mecah baris, atau gabungin dua baris.
+
+## Rencana
+
+Hal-hal yang kepikiran tapi belum dikerjain:
+
+- Animasi teks muncul per kata.
+- Edit teks dan pecah/gabung baris langsung dari daftar.
+- Simpan sesi otomatis biar nggak ilang pas refresh.
+- Cari lirik langsung dari LRCLIB tanpa download JSON manual.
+
+## Kredit
+
+Timestamp lirik datang dari [LRCLIB](https://lrclib.net). Tampilannya jelas terinspirasi dari artwork album *brat*-nya Charli XCX — dibikin buat iseng-iseng bikin video lirik, bukan buat ngaku-ngaku punya siapa pun.
+
+Lirik lagu itu karya berhak cipta. Repo ini sengaja nggak nyimpen file lirik atau audio apa pun; lihat [`.gitignore`](.gitignore).
 
 ## Lisensi
 
