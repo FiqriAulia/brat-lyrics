@@ -175,3 +175,18 @@ canvas { max-width:100%; max-height:min(58vh,640px); border-radius:8px; display:
 }
 .rec .dot { width:8px; height:8px; border-radius:50%; background:var(--danger); animation:blink 1s infinite; }
 @keyframes blink { 50% { opacity:.25; } }
+
+/* --- cari lirik --- */
+.cari { display:flex; gap:6px; }
+.cari input { flex:1; }
+.cari button { width:auto; padding:7px 14px; }
+.hasil { border:1px solid var(--border); border-radius:8px; max-height:210px; overflow-y:auto; }
+.hasil button {
+  display:block; width:100%; text-align:left; background:transparent; border:0;
+  border-bottom:1px solid var(--border); border-radius:0; padding:7px 9px; font-size:12px;
+}
+.hasil button:last-child { border-bottom:0; }
+.hasil button:hover { background:var(--surface2); }
+.hasil .judul { display:block; color:var(--text); }
+.hasil .meta { display:block; color:var(--muted); font-size:11px; margin-top:1px; }
+.hasil .kosong { padding:9px; font-size:12px; color:var(--muted); }

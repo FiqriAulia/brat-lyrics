@@ -308,6 +308,53 @@ $('lrcBtn').onclick = () => {
   say(`LRC ditempel · ${lines.length} baris`, 'ok');
 };
 
+/* ---------- cari lirik di LRCLIB ---------- */
+let hasilCari = [];
+async function cariLirik() {
+  const q = $('cariQ').value.trim();
+  if (!q) { $('cariQ').focus(); return; }
+  const kotak = $('cariHasil');
+  kotak.hidden = false;
+  kotak.innerHTML = '<div class="kosong">Nyari…</div>';
+  $('cariBtn').disabled = true;
+  try {
+    const res = await fetch('https://lrclib.net/api/search?q=' + encodeURIComponent(q));
+    if (!res.ok) throw new Error('server balas ' + res.status);
+    const data = await res.json();
+    hasilCari = (Array.isArray(data) ? data : []).filter(x => x.syncedLyrics);
+    if (!hasilCari.length) {
+      kotak.innerHTML = '<div class="kosong">Nggak ada yang punya lirik bertimestamp. Coba kata kunci lain.</div>';
+      say('Nggak ketemu lirik bersinkron buat "' + q + '".', 'err');
+      return;
+    }
+    kotak.innerHTML = hasilCari.map((x, i) =>
+      `<button data-i="${i}"><span class="judul"></span><span class="meta"></span></button>`).join('');
+    // teksnya diisi lewat textContent, bukan innerHTML — judul lagu bisa isinya apa aja
+    [...kotak.children].forEach((b, i) => {
+      const x = hasilCari[i];
+      b.children[0].textContent = x.trackName || 'Tanpa judul';
+      b.children[1].textContent = `${x.artistName || '?'} · ${fmt(x.duration || 0)}${x.albumName ? ' · ' + x.albumName : ''}`;
+    });
+    say(`${hasilCari.length} lagu ketemu. Pilih salah satu.`, 'ok');
+  } catch (err) {
+    kotak.innerHTML = '<div class="kosong">Gagal nyambung ke lrclib.net. Cek koneksi, atau pakai file JSON/LRC.</div>';
+    say('Pencarian gagal: ' + err.message, 'err');
+  } finally {
+    $('cariBtn').disabled = false;
+  }
+}
+$('cariBtn').onclick = cariLirik;
+$('cariQ').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); cariLirik(); } };
+$('cariQ').oninput = () => { $('cariNote').hidden = !$('cariQ').value.trim(); };
+$('cariHasil').onclick = e => {
+  const b = e.target.closest('button[data-i]'); if (!b) return;
+  const x = hasilCari[+b.dataset.i];
+  $('trackWrap').hidden = true;
+  $('cariHasil').hidden = true;
+  setLines(parseLRC(x.syncedLyrics, x.duration), x.duration, x.trackName);
+  say(`${x.trackName} — ${x.artistName} · ${state.lines.length} baris`, 'ok');
+};
+
 /* drag & drop */
 [['dropJson', loadLyricFile], ['dropAudio', loadAudioFile]].forEach(([id, fn]) => {
   const el = $(id);

@@ -21,6 +21,12 @@
   <aside class="card sidebar">
     <div class="sec">
       <h2><span class="num">1</span> Lirik</h2>
+      <div class="cari">
+        <input type="search" id="cariQ" placeholder="Cari judul atau artis…" autocomplete="off">
+        <button id="cariBtn">Cari</button>
+      </div>
+      <div class="hasil" id="cariHasil" hidden></div>
+      <p class="hint" id="cariNote" hidden>Kata kuncinya dikirim ke lrclib.net. Lagu dan lirik lu sendiri tetap nggak ke mana-mana.</p>
       <div class="drop" id="dropJson">
         <input type="file" id="jsonFile" accept=".json,.lrc,.txt,application/json" title="Pilih file lirik">
         <div class="big">Pilih file JSON / LRC</div>
