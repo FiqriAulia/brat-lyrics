@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>brat lyrics — generator video lirik</title>
+<title>brat lyrics — lyric video generator</title>
 <meta name="description" content="Bikin video lirik gaya brat dari file LRC/JSON langsung di browser. Ada tap sync buat benerin timing.">
 <style>
   :root {
@@ -51,6 +51,8 @@
     display:grid; place-items:center; font-size:10px; color:var(--text);
   }
   .hint { font-size:11px; color:var(--muted); margin:0; }
+  .warn { margin:0; font-size:12px; line-height:1.5; color:#ffd88a; background:#2b2312; border:1px solid #5f4a17; border-radius:8px; padding:9px 10px; }
+  .warn b { color:#ffefc6; }
 
   /* --- controls --- */
   label.f { display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--muted); }
@@ -113,7 +115,8 @@
 
   /* --- lyrics list --- */
   .lyrics { display:flex; flex-direction:column; }
-  .lyrics header { padding:11px 12px; border-bottom:1px solid var(--border); font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); font-weight:600; display:flex; justify-content:space-between; }
+  .lyrics header { padding:8px 10px 8px 12px; border-bottom:1px solid var(--border); font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); font-weight:600; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .lyrics header button { width:auto; padding:5px 11px; font-size:11px; letter-spacing:0; text-transform:none; white-space:nowrap; }
   .lyrics ol { list-style:none; margin:0; padding:5px; overflow-y:auto; max-height:230px; }
   .lyrics li { display:flex; gap:8px; padding:5px 7px; border-radius:6px; cursor:pointer; font-size:12px; color:var(--muted); }
   .lyrics li:hover { background:var(--surface2); }
@@ -127,6 +130,13 @@
   /* --- progress overlay --- */
   .rec { position:absolute; left:10px; top:10px; display:none; align-items:center; gap:7px; background:rgba(0,0,0,.72); color:#fff; padding:6px 11px; border-radius:20px; font-size:12px; backdrop-filter:blur(4px); }
   .rec.on { display:flex; }
+  .recbanner {
+    position:fixed; left:50%; transform:translateX(-50%); bottom:16px; z-index:60; display:none;
+    align-items:center; gap:10px; padding:11px 18px; border-radius:24px; font-size:14px; font-weight:700;
+    background:var(--danger); color:#2a0000; box-shadow:0 6px 24px rgba(0,0,0,.45);
+  }
+  .recbanner.on { display:flex; }
+  .recbanner .dot { background:#2a0000; }
 
   /* --- narrow screens --- */
   @media (max-width:700px){
@@ -147,7 +157,7 @@
 
 <header class="topbar">
   <span class="logo">brat</span>
-  <span class="sub">generator video lirik</span>
+  <span class="sub">lyric video generator</span>
   <span class="spacer"></span>
   <span id="status">Muat lirik dulu buat mulai.</span>
 </header>
@@ -236,8 +246,8 @@
     <div class="sec">
       <h2><span class="num">5</span> Export</h2>
       <button id="export" class="primary" disabled>Export video</button>
-      <p class="hint">Rekaman real-time: video jadi setelah lagu selesai diputar. Jangan pindah tab.</p>
-      <button id="dlLrc" class="ghost" disabled>Download LRC (timing hasil tap)</button>
+      <p class="warn"><b>Jangan pindah tab, minimize, atau matiin layar</b> selama proses export. Browser bakal nge-pause gambarnya dan video lu jadi patah.</p>
+      <p class="hint">Rekaman real-time: video jadi setelah lagu selesai diputar sekali penuh.</p>
     </div>
   </aside>
 
@@ -264,7 +274,7 @@
 
     <div class="transport">
       <button id="play" disabled>Play</button>
-      <button id="skip" class="ghost" disabled title="Lompat ke lirik pertama">Ke lirik</button>
+      <button id="skip" class="ghost" disabled title="Lompat ke lirik pertama">⏭ Ke lirik</button>
       <input type="range" id="seek" min="0" max="1" step="0.01" value="0" disabled>
       <span class="time" id="time">0:00 / 0:00</span>
     </div>
@@ -275,12 +285,21 @@
 
   <!-- ---------- lyrics list ---------- -->
   <aside class="card lyrics">
-    <header><span>Baris</span><span id="lineCount">0</span></header>
+    <header>
+      <span>Baris <span id="lineCount">0</span></span>
+      <button id="dlLrc" disabled>Download LRC</button>
+    </header>
     <ol id="lineList"></ol>
     <div class="empty" id="lineEmpty">Belum ada lirik.</div>
   </aside>
   </div>
 </main>
+
+<div class="recbanner" id="recBanner">
+  <span class="dot"></span>
+  <span>Lagi merekam — jangan pindah tab</span>
+  <span id="recPct" style="font-weight:500"></span>
+</div>
 
 <audio id="audio" preload="auto"></audio>
 
@@ -291,6 +310,7 @@ const cv = $('cv'), ctx = cv.getContext('2d'), audio = $('audio');
 const FONT = '"Arial Narrow","Helvetica Neue",Helvetica,Arial,sans-serif';
 const state = { tracks: [], lines: [], title: '', duration: 0, hasAudio: false, t: 0, t0: 0, playing: false, recording: false, tap: null, tapIdx: 0 };
 const canFilter = 'filter' in ctx;
+const PLACEHOLDER = 'semoga umur dengan rezeki sama panjang';
 
 const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const stamp = t => { t = Math.max(0, t); const m = Math.floor(t / 60); return `${String(m).padStart(2, '0')}:${(t - m * 60).toFixed(2).padStart(5, '0')}`; };
@@ -400,7 +420,7 @@ function draw(t) {
   if (!text) {
     const beforeFirst = state.tap ? state.tapIdx === state.tap.from : (state.lines.length && t + off() < state.lines[0].s);
     if (state.lines.length && beforeFirst && state.title) text = state.title;
-    else if (!state.lines.length) text = 'brat';
+    else if (!state.lines.length) text = PLACEHOLDER;
   }
   highlight(state.lines.length ? i : -1);
   if (!text) return;
@@ -685,7 +705,8 @@ $('export').onclick = async () => {
   rec.ondataavailable = e => e.data.size && chunks.push(e.data);
   rec.onstop = () => {
     state.recording = false; pause();
-    $('export').disabled = false; $('rec').classList.remove('on');
+    $('export').disabled = false;
+    $('rec').classList.remove('on'); $('recBanner').classList.remove('on');
     const ext = mime.startsWith('video/mp4') ? 'mp4' : 'webm';
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob(chunks, { type: mime }));
@@ -696,12 +717,14 @@ $('export').onclick = async () => {
 
   state.recording = true;
   $('export').disabled = true;
-  $('rec').classList.add('on');
+  $('rec').classList.add('on'); $('recBanner').classList.add('on');
   seek(0); rec.start(); play();
-  say('Merekam… jangan pindah tab sampai lagunya kelar.');
+  say('Merekam… jangan pindah tab sampai lagunya kelar.', 'err');
   const timer = setInterval(() => {
     const t = now(), pct = Math.min(100, Math.round(t / state.duration * 100));
-    $('recText').textContent = `REC ${pct}% · sisa ${fmt(Math.max(0, state.duration - t))}`;
+    const left = fmt(Math.max(0, state.duration - t));
+    $('recText').textContent = `REC ${pct}%`;
+    $('recPct').textContent = `${pct}% · sisa ${left}`;
     if (t >= state.duration - 0.05 || !state.playing) { clearInterval(timer); setTimeout(() => rec.stop(), 300); }
   }, 200);
 };
