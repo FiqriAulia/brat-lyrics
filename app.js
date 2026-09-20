@@ -525,7 +525,8 @@ function finishTap() {
     const d = L[last].s - orig[last].s;
     for (let i = last + 1; i < L.length; i++) L[i].s = orig[i].s + d;
   }
-  for (let i = 1; i < L.length; i++) if (L[i].s < L[i - 1].s) L[i].s = L[i - 1].s + 0.01;
+  // pakai <= : dua tap di milidetik yang sama bikin baris berdurasi nol
+  for (let i = 1; i < L.length; i++) if (L[i].s <= L[i - 1].s) L[i].s = L[i - 1].s + 0.01;
   relink();
   state.tap = null; pause();
   $('tapPanel').classList.remove('on');
