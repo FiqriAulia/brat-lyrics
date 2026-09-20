@@ -81,6 +81,7 @@ Timing hasil tap nggak kesimpen otomatis, jadi klik **Download LRC** kalau nggak
 index.html   rangka halaman
 style.css    tampilan
 app.js       semua logikanya
+fonts/       Archivo Narrow, cadangan buat HP
 brat_lyrics.py   renderer offline lewat ffmpeg
 sample.lrc   lirik contoh buat nyobain
 ```
@@ -133,7 +134,7 @@ Opsi lain: `--index` (pilih lagu di JSON), `--start` / `--end` (render potongan 
 
 - Export pakai `MediaRecorder`, jadi hasilnya `.mp4` di browser yang support dan `.webm` di sisanya. Perekamannya real-time dan browser harus tetep di depan.
 - Ganti baris masih potong langsung, belum ada transisi atau animasi per kata.
-- Font default Arial Narrow. Di sistem yang nggak punya font itu, tampilannya jatuh ke Liberation Sans Narrow atau Arial biasa yang lebih lebar.
+- Di macOS dan Windows teksnya pakai Arial Narrow bawaan sistem. HP nggak punya font itu, jadi kebagian Archivo Narrow yang ikut di repo ini — lebarnya cuma beda 2%, dan cuma di-download kalau Arial Narrow beneran nggak ada.
 - Tap sync ngatur waktu mulai baris. Belum bisa ngedit teksnya, mecah baris, atau gabungin dua baris.
 
 ## Rencana
@@ -147,7 +148,7 @@ Hal-hal yang kepikiran tapi belum dikerjain:
 
 ## Kredit
 
-Timestamp lirik datang dari [LRCLIB](https://lrclib.net). Tampilannya jelas terinspirasi dari artwork album *brat*-nya Charli XCX — dibikin buat iseng-iseng bikin video lirik, bukan buat ngaku-ngaku punya siapa pun.
+Timestamp lirik datang dari [LRCLIB](https://lrclib.net). Font cadangan buat HP pakai [Archivo Narrow](https://github.com/Omnibus-Type/ArchivoNarrow) dari Omnibus-Type, lisensi SIL OFL 1.1 ([`fonts/OFL.txt`](fonts/OFL.txt)). Arial Narrow sendiri font komersial punya Monotype, jadi cuma dipakai kalau udah kepasang di sistem — nggak ikut dibagikan di repo ini. Tampilannya jelas terinspirasi dari artwork album *brat*-nya Charli XCX — dibikin buat iseng-iseng bikin video lirik, bukan buat ngaku-ngaku punya siapa pun.
 
 Lirik lagu itu karya berhak cipta. Repo ini sengaja nggak nyimpen file lirik atau audio apa pun; lihat [`.gitignore`](.gitignore).
 

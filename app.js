@@ -1,7 +1,10 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const cv = $('cv'), ctx = cv.getContext('2d'), audio = $('audio');
-const FONT = '"Arial Narrow","Liberation Sans Narrow","Nimbus Sans Narrow","Helvetica Neue",Helvetica,Arial,sans-serif';
+const FONT_WEB = '"Archivo Narrow"';
+// Arial Narrow ada bawaan di macOS/Windows. HP nggak punya, jadi kebagian
+// Archivo Narrow yang kita hosting sendiri (metriknya cuma beda 1.7%).
+const FONT = `"Arial Narrow",${FONT_WEB},"Liberation Sans Narrow","Nimbus Sans Narrow","Helvetica Neue",Helvetica,Arial,sans-serif`;
 const state = { tracks: [], lines: [], title: '', duration: 0, hasAudio: false, t: 0, t0: 0, playing: false, recording: false, tap: null, tapIdx: 0 };
 const canFilter = 'filter' in ctx;
 const PLACEHOLDER = 'semoga umur dengan rezeki sama panjang';
@@ -423,5 +426,24 @@ $('export').onclick = async () => {
   }, 200);
 };
 
+/* ---------- font ---------- */
+function punyaFont(nama) {          // font kepasang di sistem atau nggak
+  const c = document.createElement('canvas').getContext('2d');
+  const probe = 'mmmmmmmmmmlli';
+  c.font = '72px monospace';
+  const base = c.measureText(probe).width;
+  c.font = `72px "${nama}", monospace`;
+  return c.measureText(probe).width !== base;
+}
+function siapkanFont() {
+  // webfont-nya cuma ditarik kalau Arial Narrow nggak ada, biar desktop nggak
+  // download 22 KB percuma
+  if (punyaFont('Arial Narrow') || !document.fonts) return;
+  document.fonts.load(`100px ${FONT_WEB}`)
+    .then(() => { layoutCache.clear(); lastActive = -1; draw(now()); })
+    .catch(() => {});
+}
+
 loadSettings();
 draw(0);
+siapkanFont();
