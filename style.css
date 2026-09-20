@@ -63,6 +63,10 @@ body {
   display:grid; place-items:center; font-size:10px; color:var(--text);
 }
 .hint { font-size:11px; color:var(--muted); margin:0; }
+.sesi { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--brat);
+  background:#16210a; border:1px solid #2f4a12; border-radius:8px; padding:6px 8px; }
+.sesi span { flex:1; }
+.sesi button { width:auto; padding:3px 9px; font-size:11px; }
 .warn { margin:0; font-size:12px; line-height:1.5; color:#ffd88a; background:#2b2312; border:1px solid #5f4a17; border-radius:8px; padding:9px 10px; }
 .warn b { color:#ffefc6; }
 

@@ -54,6 +54,7 @@ function setLines(lines, duration, title) {
   layoutCache.clear();
   renderList();
   seek(0);
+  simpanSesi();
 }
 
 /* ---------- lyric list ---------- */
@@ -273,7 +274,52 @@ $('offReset').onclick = () => { $('offset').value = 0; $('offset').dispatchEvent
   $('blurV').textContent = (+$('blur').value).toFixed(1);
   $('maxV').textContent = $('maxfont').value + '%';
   layoutCache.clear(); lastActive = -1; draw(now()); saveSettings();
+  if ($(id) === $('offset')) simpanSesi();
 }));
+
+/* ---------- sesi (lirik + timing) kesimpen otomatis ---------- */
+const SESI = 'brat-lyrics-sesi';
+let sesiTimer;
+function simpanSesi() {
+  clearTimeout(sesiTimer);
+  sesiTimer = setTimeout(() => {
+    try {
+      if (!state.lines.length) { localStorage.removeItem(SESI); tandaSesi(null); return; }
+      const data = {
+        judul: state.title,
+        durasi: state.duration,
+        geser: off(),
+        kapan: Date.now(),
+        baris: state.lines.map(l => [+l.s.toFixed(3), +l.e.toFixed(3), l.t]),
+      };
+      localStorage.setItem(SESI, JSON.stringify(data));
+      tandaSesi(data);
+    } catch (e) {}          // mode privat / storage penuh: jalan terus tanpa simpan
+  }, 400);
+}
+function tandaSesi(data) {
+  const bar = $('sesiBar');
+  if (!data) { bar.hidden = true; return; }
+  const menit = Math.round((Date.now() - data.kapan) / 60000);
+  const kapan = menit < 1 ? 'barusan' : menit < 60 ? `${menit} menit lalu` : `${Math.round(menit / 60)} jam lalu`;
+  $('sesiInfo').textContent = `Tersimpan ${kapan} · ${data.baris.length} baris`;
+  bar.hidden = false;
+}
+function muatSesi() {
+  let d;
+  try { d = JSON.parse(localStorage.getItem(SESI) || 'null'); } catch (e) { return false; }
+  if (!d || !Array.isArray(d.baris) || !d.baris.length) return false;
+  $('offset').value = d.geser || 0;
+  setLines(d.baris.map(([s, e, t]) => ({ s, e, t })), d.durasi, d.judul);
+  tandaSesi(d);
+  say(`Sesi sebelumnya dipulihkan (${d.baris.length} baris). Lagunya perlu dimuat ulang.`, 'ok');
+  return true;
+}
+$('sesiHapus').onclick = () => {
+  try { localStorage.removeItem(SESI); } catch (e) {}
+  $('sesiBar').hidden = true;
+  say('Sesi tersimpan dihapus.');
+};
 
 /* remember look settings */
 const KEYS = ['size', 'valign', 'bg', 'fg', 'blur', 'maxfont', 'tapComp', 'undoBack'];
@@ -352,6 +398,7 @@ function finishTap() {
   listItems.forEach(el => el.classList.remove('next'));
   layoutCache.clear(); lastActive = -1; stampList();
   seek(Math.max(0, L[Math.max(from, 0)].s - off() - 1));
+  simpanSesi();
   say('Timing tersimpan. Play buat cek, atau download LRC-nya.', 'ok');
 }
 function cancelTap() {
@@ -360,7 +407,7 @@ function cancelTap() {
   state.tap = null; pause();
   $('tapPanel').classList.remove('on');
   listItems.forEach(el => el.classList.remove('next'));
-  lastActive = -1; stampList(); seek(0);
+  lastActive = -1; stampList(); seek(0); simpanSesi();
   say('Tap dibatalin, timing balik ke semula.');
 }
 $('tapStart').onclick = startTap;
@@ -471,3 +518,4 @@ function siapkanFont() {
 loadSettings();
 draw(0);
 siapkanFont();
+muatSesi();
