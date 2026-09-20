@@ -59,24 +59,84 @@ function setLines(lines, duration, title) {
 
 /* ---------- lyric list ---------- */
 let listItems = [], lastActive = -1;
-function renderList() {
+function renderList(fokus) {
   const ol = $('lineList');
+  const scroll = ol.scrollTop;
   ol.innerHTML = '';
   listItems = state.lines.map((l, i) => {
     const li = document.createElement('li');
-    li.innerHTML = `<span class="ts"></span><span class="tx"></span>`;
-    li.children[1].textContent = l.t;
-    li.onclick = () => seek(Math.max(0, l.s - off()));
+    li.innerHTML = `<button class="ts" title="Loncat ke sini"></button>` +
+      `<input class="tx" spellcheck="false">` +
+      `<span class="act">` +
+      `<button data-act="pecah" title="Pecah di posisi kursor (Enter)">pecah</button>` +
+      `<button data-act="gabung" title="Gabung sama baris bawah">gabung</button>` +
+      `<button data-act="hapus" title="Hapus baris">hapus</button>` +
+      `</span>`;
+    const [ts, tx, act] = li.children;
+    tx.value = l.t;
+    ts.onclick = () => seek(Math.max(0, l.s - off()));
+    tx.oninput = () => { l.t = tx.value; layoutCache.clear(); lastActive = -1; draw(now()); simpanSesi(); };
+    tx.onkeydown = e => {
+      if (e.key === 'Enter') { e.preventDefault(); pecahBaris(i, tx.selectionStart); }
+      else if (e.key === 'Escape') tx.blur();
+    };
+    act.onclick = e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.act === 'pecah') pecahBaris(i, tx.selectionStart || Math.floor(tx.value.length / 2));
+      else if (b.dataset.act === 'gabung') gabungBaris(i);
+      else hapusBaris(i);
+    };
     ol.appendChild(li);
     return li;
   });
   stampList();
+  ol.scrollTop = scroll;
   $('lineCount').textContent = state.lines.length;
   $('lineEmpty').hidden = state.lines.length > 0;
   lastActive = -1;
+  if (fokus != null && listItems[fokus]) {
+    const tx = listItems[fokus].children[1];
+    tx.focus(); tx.setSelectionRange(0, 0);
+  }
 }
 function stampList() {
   state.lines.forEach((l, i) => { if (listItems[i]) listItems[i].children[0].textContent = stamp(l.s); });
+}
+
+/* ---------- edit baris ---------- */
+function setelahUbah(fokus) {
+  relink();
+  layoutCache.clear(); lastActive = -1;
+  renderList(fokus);
+  draw(now()); simpanSesi();
+}
+function pecahBaris(i, pos) {
+  const l = state.lines[i];
+  const kiri = l.t.slice(0, pos).trim(), kanan = l.t.slice(pos).trim();
+  if (!kiri || !kanan) { say('Taruh kursor di tengah teks dulu buat mecah baris.', 'err'); return; }
+  // waktu mulai baris baru dibagi sesuai posisi potongnya
+  const rasio = pos / Math.max(1, l.t.length);
+  const tengah = l.s + (l.e - l.s) * rasio;
+  l.t = kiri;
+  state.lines.splice(i + 1, 0, { s: Math.min(Math.max(tengah, l.s + 0.05), l.e - 0.05), e: l.e, t: kanan });
+  setelahUbah(i + 1);
+  say(`Baris dipecah jadi 2 · total ${state.lines.length} baris`, 'ok');
+}
+function gabungBaris(i) {
+  if (i + 1 >= state.lines.length) { say('Nggak ada baris di bawahnya.', 'err'); return; }
+  const l = state.lines[i], n = state.lines[i + 1];
+  l.t = `${l.t} ${n.t}`.trim();
+  l.e = n.e;
+  state.lines.splice(i + 1, 1);
+  setelahUbah(i);
+  say(`Digabung · total ${state.lines.length} baris`, 'ok');
+}
+function hapusBaris(i) {
+  const l = state.lines[i];
+  if (i > 0) state.lines[i - 1].e = l.e;      // baris sebelumnya ngisi bekasnya
+  state.lines.splice(i, 1);
+  setelahUbah(Math.min(i, state.lines.length - 1));
+  say(`Baris dihapus · sisa ${state.lines.length} baris`, 'ok');
 }
 function highlight(i) {
   if (i === lastActive) return;
@@ -352,7 +412,7 @@ function tapInfo() {
     $('tapNext').textContent = 'Klik Selesai buat simpan';
   }
   $('tapBtn').disabled = i >= L.length;
-  listItems.forEach((el, k) => el.classList.toggle('next', state.tap && k === i));
+  listItems.forEach((el, k) => el.classList.toggle('next', !!state.tap && k === i));
   if (listItems[i]) listItems[i].scrollIntoView({ block: 'nearest' });
 }
 function startTap() {
