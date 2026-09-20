@@ -2,6 +2,8 @@
 
 Bikin video lirik gaya *brat* — teks lowercase, latar hijau, blur tipis — langsung dari browser.
 
+**[Coba di sini →](https://fiqriaulia.github.io/brat-lyrics/)**
+
 ![preview](docs/preview.png)
 
 ## Abstrak
@@ -89,6 +91,12 @@ Nggak ada backend, jadi cukup hosting statis apa pun. Repo ini udah bawa workflo
 1. Push repo-nya ke GitHub.
 2. Buka **Settings → Pages**, bagian *Source* pilih **GitHub Actions**.
 3. Tunggu workflow-nya jalan. Situsnya muncul di `https://<username>.github.io/<repo>/`.
+
+Workflow-nya udah pakai `enablement: true`, jadi harusnya nyalain Pages sendiri. Tapi di sebagian repo token bawaan Actions nggak dibolehin bikin site Pages (`Resource not accessible by integration`) — kalau kena itu, nyalain manual lewat langkah 2 di atas, atau sekali jalan pakai:
+
+```bash
+gh api -X POST repos/<username>/<repo>/pages -f build_type=workflow
+```
 
 Yang perlu diingat soal data:
 
