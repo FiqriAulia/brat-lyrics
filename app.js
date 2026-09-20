@@ -6,7 +6,22 @@ const FONT_WEB = '"Archivo Narrow"';
 // Archivo Narrow yang kita hosting sendiri (metriknya cuma beda 1.7%).
 const FONT = `"Arial Narrow",${FONT_WEB},"Liberation Sans Narrow","Nimbus Sans Narrow","Helvetica Neue",Helvetica,Arial,sans-serif`;
 const state = { tracks: [], lines: [], title: '', duration: 0, hasAudio: false, t: 0, t0: 0, playing: false, recording: false, tap: null, tapIdx: 0 };
-const canFilter = 'filter' in ctx;
+// Safari iOS nggak punya ctx.filter sama sekali, dan ada browser yang punya
+// propertinya tapi nggak ngefek — jadi diuji beneran, bukan cuma dicek ada.
+const canFilter = (() => {
+  const c = document.createElement('canvas');
+  c.width = c.height = 40;
+  const x = c.getContext('2d');
+  if (!('filter' in x)) return false;
+  x.fillStyle = '#fff'; x.fillRect(0, 0, 40, 40);
+  x.filter = 'blur(4px)';
+  x.fillStyle = '#000'; x.fillRect(15, 15, 10, 10);
+  x.filter = 'none';
+  const d = x.getImageData(0, 0, 40, 40).data;
+  let abu = 0;
+  for (let i = 0; i < d.length; i += 4) if (d[i] > 30 && d[i] < 225) abu++;
+  return abu > 20;                    // ada piksel abu-abu = blur beneran jalan
+})();
 const PLACEHOLDER = 'semoga umur dengan rezeki sama panjang';
 
 const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
@@ -128,7 +143,16 @@ function draw(t) {
   ctx.font = `${fs}px ${FONT}`; ctx.textBaseline = 'top'; ctx.fillStyle = $('fg').value;
   const paint = dx => lines.forEach((l, k) => ctx.fillText(l, w * .07 + dx, y0 + k * lh));
   if (canFilter) { ctx.filter = `blur(${blur}px)`; paint(0); ctx.filter = 'none'; }
-  else { ctx.shadowColor = $('fg').value; ctx.shadowBlur = blur * 2; ctx.shadowOffsetX = 20000; paint(-20000); paint(-20000); ctx.shadowOffsetX = 0; ctx.shadowBlur = 0; }
+  else {
+    // Tanpa ctx.filter: teksnya digambar jauh di luar kanvas, yang kelihatan
+    // cuma bayangannya yang udah ke-blur. shadowBlur = 2x sigma-nya filter.
+    // Cukup sekali paint — dua kali bikin alpha numpuk dan hurufnya jadi gemuk.
+    ctx.shadowColor = $('fg').value;
+    ctx.shadowBlur = blur * 2;
+    ctx.shadowOffsetX = 20000;
+    paint(-20000);
+    ctx.shadowOffsetX = 0; ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+  }
 }
 
 /* ---------- playback ---------- */
