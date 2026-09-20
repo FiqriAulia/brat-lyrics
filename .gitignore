@@ -1,0 +1,33 @@
+# lirik & audio (berhak cipta — jangan ikut ke repo publik)
+*.json
+*.lrc
+*.mp3
+*.wav
+*.m4a
+*.ogg
+*.flac
+!package.json
+!sample.lrc
+
+# hasil render
+*.mp4
+*.webm
+*.mov
+*.gif
+*.png
+!docs/*.png
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# setelan lokal claude code
+.claude/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
