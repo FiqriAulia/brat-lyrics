@@ -10,7 +10,7 @@ Generator video lirik gaya *brat* — teks lowercase, background hijau, blur tip
 - **Input fleksibel.** File JSON hasil [LRCLIB](https://lrclib.net), file `.lrc`, atau tempel teks LRC langsung.
 - **Tap sync.** Tempo lagunya meleset? Putar lagunya, tekan `Spasi` tiap ganti baris, timing-nya langsung kesimpen. Ada undo yang sekalian mundurin lagunya.
 - **Geser timing global** kalau cuma telat/kecepetan beberapa detik.
-- **Preview live** dengan daftar baris yang bisa diklik buat loncat.
+- **Preview live** dengan daftar baris di bawahnya yang bisa diklik buat loncat.
 - **Export video** 1:1, 9:16, atau 16:9, lengkap dengan audionya.
 - **Download LRC** hasil tap biar timing-nya bisa dipakai lagi.
 - Ada juga [`brat_lyrics.py`](brat_lyrics.py) buat render offline lewat ffmpeg — lebih cepat, tapi tanpa preview.
@@ -36,7 +36,7 @@ Generator video lirik gaya *brat* — teks lowercase, background hijau, blur tip
 | `Spasi` | play/pause, atau tap saat mode tap sync |
 | `←` `→` | geser 5 detik |
 | `T` | mulai tap sync |
-| `⌫` | undo tap terakhir (lagu ikut mundur) |
+| `Backspace` | undo tap terakhir (lagu ikut mundur) |
 | `Esc` | batalin tap sync |
 
 ## Tap sync
@@ -45,7 +45,7 @@ Buat lagu yang timing LRC-nya berantakan:
 
 1. Klik **Mulai tap sync** (atau tekan `T`). Lagu jalan dari awal.
 2. Tiap denger baris baru mulai, tekan `Spasi`. Baris berikutnya yang harus di-tap muncul di bar bawah preview.
-3. Salah tap? `⌫` buat undo — lagu mundur beberapa detik biar bisa langsung coba lagi.
+3. Salah tap? `Backspace` buat undo — lagu mundur beberapa detik biar bisa langsung coba lagi.
 4. Setelah baris terakhir (atau klik *Selesai*), timing baru langsung kepakai.
 
 Setelan tambahan:
