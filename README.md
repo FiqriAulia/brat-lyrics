@@ -73,13 +73,25 @@ Setelan tambahan:
 
 Timing hasil tap nggak kesimpen otomatis, jadi klik **Download LRC** kalau nggak mau ngulang dari nol.
 
+## Struktur file
+
+```
+index.html   rangka halaman
+style.css    tampilan
+app.js       semua logikanya
+brat_lyrics.py   renderer offline lewat ffmpeg
+sample.lrc   lirik contoh buat nyobain
+```
+
+Tiga file pertama saling bergantung, jadi kalau mau jalanin lokal ambil satu folder utuh — bukan cuma `index.html`-nya. Sengaja nggak pakai ES module biar tetap jalan waktu dibuka langsung lewat `file://`, tanpa perlu nyalain server.
+
 ## Cara kerjanya
 
 Empat langkah, semuanya di browser:
 
-1. **Parse.** Teks LRC diubah jadi daftar `{mulai, selesai, teks}`. Waktu selesai satu baris diambil dari waktu mulai baris berikutnya, jadi cukup satu timestamp per baris.
-2. **Layout.** Tiap baris dicari ukuran font terbesar yang masih muat sekotak, lewat binary search pakai `measureText`. Hasilnya di-cache, karena baris yang sama sering muncul berkali-kali di satu lagu.
-3. **Render.** Tiap frame nggambar ulang kanvas: latar polos, teks lowercase, blur pakai `ctx.filter`. Posisi waktunya diambil dari `audio.currentTime` biar nggak pernah ngedrift dari lagunya.
+1. **Parse.** (`parseLRC`) Teks LRC diubah jadi daftar `{mulai, selesai, teks}`. Waktu selesai satu baris diambil dari waktu mulai baris berikutnya, jadi cukup satu timestamp per baris.
+2. **Layout.** (`layout`) Tiap baris dicari ukuran font terbesar yang masih muat sekotak, lewat binary search pakai `measureText`. Hasilnya di-cache, karena baris yang sama sering muncul berkali-kali di satu lagu.
+3. **Render.** (`draw`) Tiap frame nggambar ulang kanvas: latar polos, teks lowercase, blur pakai `ctx.filter`. Posisi waktunya diambil dari `audio.currentTime` biar nggak pernah ngedrift dari lagunya.
 4. **Rekam.** `canvas.captureStream()` digabung sama audio lewat `AudioContext`, terus disuapin ke `MediaRecorder`. Hasilnya blob yang langsung di-download.
 
 Konsekuensinya: perekaman jalan real-time. Lagu tiga menit ya tiga menit, dan browser harus tetep di depan selama itu. Kalau butuh cepat, pakai versi CLI-nya yang nge-render frame langsung ke ffmpeg tanpa nunggu.
