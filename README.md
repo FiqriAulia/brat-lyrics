@@ -21,10 +21,12 @@ Semua jalan di browser. Nggak ada server, nggak ada upload, nggak ada proses ren
 ![fitur](docs/fitur.gif)
 
 - **Tanpa server** — tiga file statis, nggak ada build step. Buka lokal atau hosting di GitHub Pages, sama aja.
-- **Input fleksibel** — JSON dari LRCLIB, file `.lrc`, atau tempel teks LRC langsung.
+- **Cari lirik** — ketik judulnya, ambil langsung dari LRCLIB. Bisa juga file `.lrc`, JSON, atau tempel teks LRC.
 - **Tap sync** — benerin timing yang meleset sambil lagunya jalan, lengkap sama undo yang ikut mundurin lagunya.
+- **Edit baris** — ganti teksnya, pecah satu baris jadi dua, atau gabungin dua baris, langsung dari daftar.
+- **Animasi per kata** — kata muncul satu-satu ngikutin durasi barisnya. Bisa dimatiin.
 - **Geser timing global** — buat yang telat atau kecepetan sekian detik di semua baris.
-- **Preview live** — plus daftar baris yang bisa diklik buat loncat.
+- **Sesi kesimpen** — lirik dan timing nggak ilang waktu halaman di-refresh.
 - **Export video** — 1:1, 9:16, atau 16:9, lengkap sama audionya.
 - **Download LRC** — hasil tap biar timing-nya bisa dipakai lagi lain kali.
 - **Render offline** — [`brat_lyrics.py`](brat_lyrics.py) nge-render lewat ffmpeg, jauh lebih cepat tapi tanpa preview.
@@ -32,7 +34,7 @@ Semua jalan di browser. Nggak ada server, nggak ada upload, nggak ada proses ren
 ## Cara pakai
 
 1. Buka `index.html` di browser. Chrome atau Edge paling mulus buat export.
-2. **Lirik** — pilih file JSON/LRC, atau tempel teks LRC lalu klik *Pakai LRC ini*.
+2. **Lirik** — cari judulnya langsung di kolom pencarian, atau pilih file JSON/LRC, atau tempel teks LRC lalu klik *Pakai LRC ini*.
 3. **Audio** — pilih file lagunya. Opsional, tapi wajib kalau mau ada suaranya di video.
 4. **Tampilan** — atur ukuran, warna, blur, ukuran font.
 5. **Timing** — kalau meleset, pakai geser global atau tap sync.
@@ -73,7 +75,18 @@ Setelan tambahan:
 - **Kompensasi (ms)** — default 100 ms, karena refleks orang biasanya telat dikit dari yang didenger. Masih telat? Naikin.
 - **Mundur saat undo (detik)** — seberapa jauh lagu mundur waktu undo.
 
-Timing hasil tap nggak kesimpen otomatis, jadi klik **Download LRC** kalau nggak mau ngulang dari nol.
+Timing hasil tap kesimpen otomatis di browser, jadi aman kalau halamannya ke-refresh. Tapi itu cuma di satu browser — klik **Download LRC** kalau mau timing-nya kebawa ke tempat lain atau disimpen permanen.
+
+## Edit baris
+
+Daftar baris di bawah preview bisa diedit langsung:
+
+- **Ganti teks** — klik teksnya, ketik. Preview ikut berubah.
+- **Pecah baris** — taruh kursor di tengah teks lalu tekan `Enter`. Waktu mulai baris baru dibagi proporsional sesuai posisi potongnya.
+- **Gabung** — nyatuin baris itu sama baris di bawahnya.
+- **Hapus** — buang baris, waktunya diserap baris sebelumnya.
+
+Timeline-nya dijaga tetap nyambung: waktu selesai satu baris selalu nempel ke waktu mulai baris berikutnya.
 
 ## Struktur file
 
@@ -117,7 +130,8 @@ Yang perlu diingat soal data:
 
 - File lirik dan audio dibaca lewat `FileReader`/`URL.createObjectURL` — nggak pernah ninggalin browser lu.
 - Video hasilnya dibikin di memori terus langsung di-download. Nggak ada yang nyangkut di server.
-- Yang kesimpen cuma setelan tampilan (ukuran, warna, blur) di `localStorage`, buat kenyamanan aja.
+- Setelan tampilan, lirik, dan timing kesimpen di `localStorage` — cuma di browser lu, nggak ke mana-mana.
+- **Satu-satunya yang keluar**: kalau lu pakai fitur cari lirik, kata kuncinya dikirim ke `lrclib.net`. Nggak pakai fitur itu, nggak ada request keluar sama sekali.
 - Artinya kuota GitHub yang kepake cuma buat file statisnya — sekitar seratus kilobyte, nggak peduli berapa banyak video yang dibikin orang.
 
 ## Render lewat CLI
@@ -133,18 +147,18 @@ Opsi lain: `--index` (pilih lagu di JSON), `--start` / `--end` (render potongan 
 ## Batasan
 
 - Export pakai `MediaRecorder`, jadi hasilnya `.mp4` di browser yang support dan `.webm` di sisanya. Perekamannya real-time dan browser harus tetep di depan.
-- Ganti baris masih potong langsung, belum ada transisi atau animasi per kata.
+- Ganti baris masih potong langsung, belum ada transisi.
 - Di macOS dan Windows teksnya pakai Arial Narrow bawaan sistem. HP nggak punya font itu, jadi kebagian Archivo Narrow yang ikut di repo ini — lebarnya cuma beda 2%, dan cuma di-download kalau Arial Narrow beneran nggak ada.
-- Tap sync ngatur waktu mulai baris. Belum bisa ngedit teksnya, mecah baris, atau gabungin dua baris.
+- Sesi kesimpen per browser. Ganti browser atau bersihin data situs, ya ilang — makanya ada tombol download LRC.
 
 ## Rencana
 
 Hal-hal yang kepikiran tapi belum dikerjain:
 
-- Animasi teks muncul per kata.
-- Edit teks dan pecah/gabung baris langsung dari daftar.
-- Simpan sesi otomatis biar nggak ilang pas refresh.
-- Cari lirik langsung dari LRCLIB tanpa download JSON manual.
+- Transisi antar baris, bukan ganti potong langsung.
+- Atur waktu mulai tiap baris dengan nyeret di timeline.
+- Undo/redo buat hasil edit baris.
+- Ekspor lebih cepat tanpa harus nunggu lagunya kelar diputar.
 
 ## Kredit
 

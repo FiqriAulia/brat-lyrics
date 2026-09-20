@@ -182,6 +182,26 @@ function currentLine(t) {
   return state.lines.findIndex(l => tt >= l.s && tt < l.e);
 }
 
+// Potong tiap baris jadi prefix kata. Karena teksnya rata kiri, prefix-nya
+// mendarat di posisi yang sama persis kayak teks penuh — nggak ada yang geser.
+const MUNCUL = 0.6;          // semua kata udah tampil di 60% durasi baris
+function sampaiKata(lines, line, t) {
+  const total = lines.reduce((n, l) => n + l.split(/\s+/).length, 0);
+  const durasi = Math.max(0.15, (line.e - line.s) * MUNCUL);
+  const progres = Math.max(0, Math.min(1, (t - line.s) / durasi));
+  const tampil = Math.max(1, Math.ceil(progres * total));
+  if (tampil >= total) return lines;
+  const out = [];
+  let sisa = tampil;
+  for (const l of lines) {
+    const kata = l.split(/\s+/);
+    if (sisa <= 0) { out.push(''); continue; }
+    out.push(kata.slice(0, sisa).join(' '));
+    sisa -= kata.length;
+  }
+  return out;
+}
+
 function draw(t) {
   const w = cv.width, h = cv.height;
   ctx.filter = 'none'; ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
@@ -198,11 +218,12 @@ function draw(t) {
   highlight(state.lines.length ? i : -1);
   if (!text) return;
 
-  const { fs, lines } = layout(text.toLowerCase(), w, h);
+  let { fs, lines } = layout(text.toLowerCase(), w, h);
+  if ($('perKata').checked && i >= 0 && !state.tap) lines = sampaiKata(lines, state.lines[i], t + off());
   const lh = fs * 1.05, y0 = $('valign').value === 'top' ? h * .08 : (h - lines.length * lh) / 2;
   const blur = +$('blur').value * fs / 100;
   ctx.font = `${fs}px ${FONT}`; ctx.textBaseline = 'top'; ctx.fillStyle = $('fg').value;
-  const paint = dx => lines.forEach((l, k) => ctx.fillText(l, w * .07 + dx, y0 + k * lh));
+  const paint = dx => lines.forEach((l, k) => { if (l) ctx.fillText(l, w * .07 + dx, y0 + k * lh); });
   if (canFilter) { ctx.filter = `blur(${blur}px)`; paint(0); ctx.filter = 'none'; }
   else {
     // Tanpa ctx.filter: teksnya digambar jauh di luar kanvas, yang kelihatan
@@ -366,6 +387,7 @@ document.addEventListener('dragover', e => e.preventDefault());
 document.addEventListener('drop', e => e.preventDefault());
 
 /* look & timing controls */
+$('perKata').onchange = () => { layoutCache.clear(); lastActive = -1; draw(now()); saveSettings(); };
 $('size').onchange = () => {
   const [w, h] = $('size').value.split('x');
   cv.width = +w; cv.height = +h; layoutCache.clear(); draw(now());
@@ -431,12 +453,17 @@ $('sesiHapus').onclick = () => {
 /* remember look settings */
 const KEYS = ['size', 'valign', 'bg', 'fg', 'blur', 'maxfont', 'tapComp', 'undoBack'];
 function saveSettings() {
-  try { localStorage.setItem('brat-lyrics', JSON.stringify(Object.fromEntries(KEYS.map(k => [k, $(k).value])))); } catch (e) {}
+  try {
+    const d = Object.fromEntries(KEYS.map(k => [k, $(k).value]));
+    d.perKata = $('perKata').checked;
+    localStorage.setItem('brat-lyrics', JSON.stringify(d));
+  } catch (e) {}
 }
 function loadSettings() {
   try {
     const d = JSON.parse(localStorage.getItem('brat-lyrics') || '{}');
     KEYS.forEach(k => { if (d[k] != null) $(k).value = d[k]; });
+    $('perKata').checked = !!d.perKata;
   } catch (e) {}
   const [w, h] = $('size').value.split('x');
   cv.width = +w; cv.height = +h;
