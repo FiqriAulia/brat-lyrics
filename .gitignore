@@ -16,6 +16,7 @@
 *.gif
 *.png
 !docs/*.png
+!docs/*.gif
 
 # python
 __pycache__/

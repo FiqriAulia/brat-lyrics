@@ -18,14 +18,16 @@ Semua jalan di browser. Nggak ada server, nggak ada upload, nggak ada proses ren
 
 ## Fitur
 
-- **Tanpa server.** Satu file HTML. Buka lokal atau hosting di GitHub Pages, sama aja.
-- **Input fleksibel.** JSON dari LRCLIB, file `.lrc`, atau tempel teks LRC langsung.
-- **Tap sync** buat benerin timing yang meleset, lengkap sama undo yang ikut mundurin lagunya.
-- **Geser timing global** kalau semua baris telat atau kecepetan sekian detik.
-- **Preview live** plus daftar baris yang bisa diklik buat loncat.
-- **Export video** 1:1, 9:16, atau 16:9, lengkap sama audionya.
-- **Download LRC** hasil tap biar timing-nya bisa dipakai lagi lain kali.
-- **[`brat_lyrics.py`](brat_lyrics.py)** buat render offline lewat ffmpeg — jauh lebih cepat, tapi tanpa preview.
+![fitur](docs/fitur.gif)
+
+- **Tanpa server** — tiga file statis, nggak ada build step. Buka lokal atau hosting di GitHub Pages, sama aja.
+- **Input fleksibel** — JSON dari LRCLIB, file `.lrc`, atau tempel teks LRC langsung.
+- **Tap sync** — benerin timing yang meleset sambil lagunya jalan, lengkap sama undo yang ikut mundurin lagunya.
+- **Geser timing global** — buat yang telat atau kecepetan sekian detik di semua baris.
+- **Preview live** — plus daftar baris yang bisa diklik buat loncat.
+- **Export video** — 1:1, 9:16, atau 16:9, lengkap sama audionya.
+- **Download LRC** — hasil tap biar timing-nya bisa dipakai lagi lain kali.
+- **Render offline** — [`brat_lyrics.py`](brat_lyrics.py) nge-render lewat ffmpeg, jauh lebih cepat tapi tanpa preview.
 
 ## Cara pakai
 
